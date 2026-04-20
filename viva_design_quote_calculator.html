@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viva Design 展覽報價計算機</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .checkbox-item {
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-3">Viva Design</h1>
+            <p class="text-xl text-gray-600">專業展覽設計報價計算機</p>
+            <div class="w-24 h-1 bg-black mx-auto mt-4"></div>
+        </div>
+
+        <!-- Main Calculator -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <!-- Step 1: Exhibition Type -->
+            <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">展覽類型</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button onclick="selectType('domestic', 1.0)" class="type-btn p-6 border-2 border-gray-300 rounded-lg hover:border-black transition-all">
+                        <div class="text-lg font-semibold">國內展覽</div>
+                        <div class="text-sm text-gray-500 mt-1">x 1.0</div>
+                    </button>
+                    <button onclick="selectType('china', 1.8)" class="type-btn p-6 border-2 border-gray-300 rounded-lg hover:border-black transition-all">
+                        <div class="text-lg font-semibold">中國展覽</div>
+                        <div class="text-sm text-gray-500 mt-1">x 1.8</div>
+                    </button>
+                    <button onclick="selectType('usa', 2.5)" class="type-btn p-6 border-2 border-gray-300 rounded-lg hover:border-black transition-all">
+                        <div class="text-lg font-semibold">美國展覽</div>
+                        <div class="text-sm text-gray-500 mt-1">x 2.5</div>
+                    </button>
+                    <button onclick="selectType('commercial', 0)" class="type-btn p-6 border-2 border-gray-300 rounded-lg hover:border-black transition-all">
+                        <div class="text-lg font-semibold">商業空間</div>
+                        <div class="text-sm text-gray-500 mt-1">專人諮詢</div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="calculatorContent" class="hidden">
+                <!-- Step 2: Booth Size & Material -->
+                <div class="mb-10">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">攤位規格</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">攤位格數</label>
+                            <input type="number" id="boothSize" placeholder="8" min="1" value="8" 
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                                   onchange="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">攤位材質</label>
+                            <select id="material" class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none" onchange="calculate()">
+                                <option value="40000,70000">組合系統 (40,000 ~ 70,000)</option>
+                                <option value="70000,150000">木作特裝 (70,000 ~ 150,000)</option>
+                                <option value="70000,100000">混合式攤位 (70,000 ~ 100,000)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Add-ons -->
+                <div class="mb-10">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">加值服務</h2>
+                    
+                    <!-- Structure -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">結構類</h3>
+                        <div class="space-y-2">
+                            <label class="checkbox-item flex items-center p-3 rounded-lg cursor-pointer">
+                                <input type="checkbox" class="w-5 h-5 mr-3" onchange="calculate()">
+                                <span class="flex-1">架高地台</span>
+                                <span class="text-gray-600">3,000 / 格</span>
+                                <input type="hidden" value="platform">
+                            </label>
+                            <label class="checkbox-item flex items-center p-3 rounded-lg cursor-pointer">
+                                <input type="checkbox" class="w-5 h-5 mr-3" onchange="calculate()">
+                                <span class="flex-1">超高結構 (6米)</span>
+                                <span class="text-gray-600">50,000</span>
+                                <input type="hidden" value="highStructure">
+                            </label>
+                            <label class="checkbox-item flex items-center p-3 rounded-lg cursor-pointer">
+                                <input type="checkbox" class="w-5 h-5 mr-3" onchange="calculate()">
+                                <span class="flex-1">二樓設計</span>
+                                <span class="text-gray-600">150,000</span>
+                                <input type="hidden" value="secondFloor">
+                            </label>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="hangPointCheck" onchange="calculate()">
+                                    <span class="font-medium">10米吊點 (15,000/點)</span>
+                                </label>
+                                <input type="number" id="hangPoints" min="1" value="1" placeholder="數量" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual & Design -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">視覺與設計</h3>
+                        <div class="space-y-2">
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="electricalCheck" onchange="calculate()">
+                                    <span class="font-medium">水電燈具迴路</span>
+                                </label>
+                                <div class="text-sm text-gray-600 ml-8">
+                                    4-6格: 45,000 / 6-10格: 100,000 / 15格以上另計
+                                </div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="artDesignCheck" onchange="calculate()">
+                                    <span class="font-medium">美術設計輸出</span>
+                                </label>
+                                <div class="text-sm text-gray-600 ml-8">
+                                    4-6格: 70,000 / 6-10格: 100,000
+                                </div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="lightboxCheck" onchange="calculate()">
+                                    <span class="font-medium">發光燈箱</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="lightboxSize" class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                        <option value="2500">60x90 (2,500)</option>
+                                        <option value="4000">80x120 (4,000)</option>
+                                    </select>
+                                    <input type="number" id="lightboxQty" min="1" value="1" placeholder="數量" 
+                                           class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                </div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="balloonCheck" onchange="calculate()">
+                                    <span class="font-medium">空飄氣球</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="balloonType" class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                        <option value="20000">灌充式 (20,000)</option>
+                                        <option value="60000">手工+灌充 (60,000)</option>
+                                    </select>
+                                    <input type="number" id="balloonQty" min="1" value="1" placeholder="數量" 
+                                           class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technology -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">科技設備</h3>
+                        <div class="space-y-2">
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-3">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="ledCheck" onchange="calculate()">
+                                    <span class="font-medium">LED 視訊牆</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" id="ledWidth" placeholder="寬度 (cm)" min="0" 
+                                           class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                    <input type="number" id="ledHeight" placeholder="高度 (cm)" min="0" 
+                                           class="px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">單位: 50x50cm, 每片 3,500 + 基礎安裝 20,000</div>
+                            </div>
+                            <label class="checkbox-item flex items-center p-3 rounded-lg cursor-pointer">
+                                <input type="checkbox" class="w-5 h-5 mr-3" onchange="calculate()">
+                                <span class="flex-1">3D 浮空投影</span>
+                                <span class="text-gray-600">35,000 起</span>
+                                <input type="hidden" value="hologram">
+                            </label>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="flex items-center mb-3">
+                                    <input type="checkbox" class="w-5 h-5 mr-3" id="audioCheck" onchange="calculate()">
+                                    <span class="font-medium">音響組 (基本 6,888)</span>
+                                </label>
+                                <div>
+                                    <label class="text-sm text-gray-600 mb-1 block">加購喇叭 (1,500/支)</label>
+                                    <input type="number" id="extraSpeakers" min="0" value="0" placeholder="數量" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded" onchange="calculate()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Furniture -->
+                <div class="mb-10">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">家具租賃</h2>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">洽談桌 (800/張)</label>
+                            <input type="number" id="tables" min="0" value="0" 
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                                   onchange="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">洽談椅 (500/張)</label>
+                            <input type="number" id="chairs" min="0" value="0" 
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                                   onchange="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">垃圾桶 (免費)</label>
+                            <input type="number" id="bins" min="0" value="0" 
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                                   onchange="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculate Button -->
+                <div class="text-center mb-8">
+                    <button onclick="showResults()" class="btn-primary bg-black text-white px-12 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800">
+                        計算報價
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultation Message for Commercial -->
+        <div id="consultationMsg" class="hidden bg-white rounded-lg shadow-lg p-8 text-center fade-in">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">商業空間 / 特展設計</h2>
+            <p class="text-gray-600 mb-6">此類型專案需要專人進行詳細評估與規劃</p>
+            <button class="btn-primary bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800">
+                聯繫專人諮詢
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8 fade-in">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">預估報價</h2>
+                
+                <div class="bg-gray-900 text-white p-8 rounded-lg mb-8 text-center">
+                    <div class="text-sm text-gray-400 mb-2">預估總價範圍</div>
+                    <div class="text-4xl font-bold" id="priceRange">NT$ 0 ~ 0</div>
+                    <div class="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-300">
+                        <div class="mb-1">基礎費用包含:</div>
+                        <div>• 3D設計圖 7,000元</div>
+                        <div>• 3D施工圖 5,000元/格</div>
+                        <div>• 美術訂單 3,000元/格</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">費用組成分析</h3>
+                    <div class="max-w-2xl mx-auto">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lead Capture Form -->
+                <div class="border-t-2 border-gray-200 pt-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">免費領取 3D 設計圖</h3>
+                    <p class="text-gray-600 text-center mb-6">同步獲得《展覽設計施工圖折扣碼》與專屬優惠</p>
+                    
+                    <form id="leadForm" class="max-w-lg mx-auto space-y-4">
+                        <input type="text" placeholder="姓名" required
+                               class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none">
+                        <input type="email" placeholder="Email" required
+                               class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none">
+                        <input type="text" placeholder="公司名稱" required
+                               class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none">
+                        <input type="tel" placeholder="聯絡電話" required
+                               class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none">
+                        <button type="submit" class="btn-primary w-full bg-black text-white py-4 rounded-lg font-semibold hover:bg-gray-800">
+                            領取 3D 渲染圖
+                        </button>
+                    </form>
+                    
+                    <div id="thankYouMsg" class="hidden text-center mt-6 p-6 bg-gray-100 rounded-lg">
+                        <p class="text-lg font-semibold text-gray-900 mb-3">感謝您的填寫!</p>
+                        <p class="text-gray-600 mb-4">我們已將 3D 渲染圖與折扣碼發送至您的信箱</p>
+                        <div class="space-x-4">
+                            <a href="#" class="inline-block bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800">需求諮詢</a>
+                            <a href="#" class="inline-block border-2 border-black text-black px-6 py-2 rounded-lg hover:bg-gray-100">LINE 聯繫</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedType = '';
+        let typeMultiplier = 1.0;
+        let chartInstance = null;
+
+        function selectType(type, multiplier) {
+            selectedType = type;
+            typeMultiplier = multiplier;
+            
+            // Update button styles
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('border-black', 'bg-gray-100');
+                btn.classList.add('border-gray-300');
+            });
+            event.target.closest('.type-btn').classList.add('border-black', 'bg-gray-100');
+            event.target.closest('.type-btn').classList.remove('border-gray-300');
+            
+            // Show calculator or consultation
+            if (type === 'commercial') {
+                document.getElementById('calculatorContent').classList.add('hidden');
+                document.getElementById('resultsSection').classList.add('hidden');
+                document.getElementById('consultationMsg').classList.remove('hidden');
+            } else {
+                document.getElementById('calculatorContent').classList.remove('hidden');
+                document.getElementById('consultationMsg').classList.add('hidden');
+                calculate();
+            }
+        }
+
+        function calculate() {
+            // This function can be used for real-time updates if needed
+        }
+
+        function showResults() {
+            const boothSize = parseInt(document.getElementById('boothSize').value) || 8;
+            const materialRange = document.getElementById('material').value.split(',');
+            const minMaterial = parseInt(materialRange[0]);
+            const maxMaterial = parseInt(materialRange[1]);
+            
+            // Basic fees: 3D design + 3D construction + art order
+            const basicFee = 7000 + (5000 * boothSize) + (3000 * boothSize);
+            
+            let minPrice = (boothSize * minMaterial) + basicFee;
+            let maxPrice = (boothSize * maxMaterial) + basicFee;
+            let addons = 0;
+            
+            // Calculate add-ons
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                const parent = cb.closest('label') || cb.parentElement;
+                const hiddenInput = parent.querySelector('input[type="hidden"]');
+                
+                if (hiddenInput) {
+                    const value = hiddenInput.value;
+                    switch(value) {
+                        case 'platform':
+                            addons += 3000 * boothSize;
+                            break;
+                        case 'highStructure':
+                            addons += 50000;
+                            break;
+                        case 'secondFloor':
+                            addons += 150000;
+                            break;
+                        case 'hologram':
+                            addons += 35000;
+                            break;
+                    }
+                }
+            });
+            
+            // Electrical (水電) - updated pricing
+            if (document.getElementById('electricalCheck').checked) {
+                if (boothSize >= 4 && boothSize <= 6) {
+                    addons += 45000;
+                } else if (boothSize >= 6 && boothSize <= 10) {
+                    addons += 100000;
+                } else if (boothSize >= 15) {
+                    addons += 0; // 另計，實際使用時需要諮詢
+                }
+            }
+            
+            // Art Design (美術輸出) - updated pricing
+            if (document.getElementById('artDesignCheck').checked) {
+                if (boothSize >= 4 && boothSize <= 6) {
+                    addons += 70000;
+                } else if (boothSize >= 6 && boothSize <= 10) {
+                    addons += 100000;
+                }
+            }
+            
+            // Hang points
+            if (document.getElementById('hangPointCheck').checked) {
+                const points = parseInt(document.getElementById('hangPoints').value) || 1;
+                addons += points * 15000;
+            }
+            
+            // Lightbox with quantity
+            if (document.getElementById('lightboxCheck').checked) {
+                const price = parseInt(document.getElementById('lightboxSize').value);
+                const qty = parseInt(document.getElementById('lightboxQty').value) || 1;
+                addons += price * qty;
+            }
+            
+            // Balloon with quantity
+            if (document.getElementById('balloonCheck').checked) {
+                const price = parseInt(document.getElementById('balloonType').value);
+                const qty = parseInt(document.getElementById('balloonQty').value) || 1;
+                addons += price * qty;
+            }
+            
+            // LED Wall
+            if (document.getElementById('ledCheck').checked) {
+                const width = parseInt(document.getElementById('ledWidth').value) || 0;
+                const height = parseInt(document.getElementById('ledHeight').value) || 0;
+                if (width > 0 && height > 0) {
+                    const panels = Math.ceil(width / 50) * Math.ceil(height / 50);
+                    addons += (panels * 3500) + 20000;
+                }
+            }
+            
+            // Audio
+            if (document.getElementById('audioCheck').checked) {
+                addons += 6888;
+                const extraSpeakers = parseInt(document.getElementById('extraSpeakers').value) || 0;
+                addons += extraSpeakers * 1500;
+            }
+            
+            // Furniture
+            const tables = parseInt(document.getElementById('tables').value) || 0;
+            const chairs = parseInt(document.getElementById('chairs').value) || 0;
+            let furnitureCost = (tables * 800) + (chairs * 500);
+            if (tables > 0 || chairs > 0) {
+                furnitureCost += 500; // Delivery fee
+            }
+            
+            // Apply multiplier
+            const totalMin = Math.round((minPrice + addons + furnitureCost) * typeMultiplier);
+            const totalMax = Math.round((maxPrice + addons + furnitureCost) * typeMultiplier);
+            
+            // Display results
+            document.getElementById('priceRange').textContent = 
+                `NT$ ${totalMin.toLocaleString()} ~ ${totalMax.toLocaleString()}`;
+            
+            // Show results section
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Create chart
+            createCostChart(totalMax);
+        }
+
+        function createCostChart(total) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            const data = {
+                labels: ['木工工程', '美工視覺', '水電/電工', '家具租賃', '視訊設備', '雜支/場地/運費'],
+                datasets: [{
+                    data: [
+                        Math.round(total * 0.45),
+                        Math.round(total * 0.10),
+                        Math.round(total * 0.05),
+                        Math.round(total * 0.017),
+                        Math.round(total * 0.019),
+                        Math.round(total * 0.364)
+                    ],
+                    backgroundColor: [
+                        '#1f2937',
+                        '#374151',
+                        '#4b5563',
+                        '#6b7280',
+                        '#9ca3af',
+                        '#d1d5db'
+                    ]
+                }]
+            };
+            
+            chartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13
+                                },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const value = data.datasets[0].data[i];
+                                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return {
+                                                text: `${label} (${percentage}%)`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: NT$ ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const leadForm = document.getElementById('leadForm');
+            if (leadForm) {
+                leadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    document.getElementById('leadForm').classList.add('hidden');
+                    document.getElementById('thankYouMsg').classList.remove('hidden');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
